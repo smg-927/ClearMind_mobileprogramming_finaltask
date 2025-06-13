@@ -148,7 +148,7 @@ class _SpinnerScreenState extends State<SpinnerScreen>
                 border: Border.all(color: Colors.white, width: 5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
+                    color: Colors.black.withValues(alpha: 0.18),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -167,7 +167,7 @@ class _SpinnerScreenState extends State<SpinnerScreen>
                           width: 24,
                           height: 110,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.32),
+                            color: Colors.white.withValues(alpha: 0.32),
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
@@ -182,7 +182,7 @@ class _SpinnerScreenState extends State<SpinnerScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
+                          color: Colors.black.withValues(alpha: 0.10),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),

@@ -59,7 +59,7 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 48),
               _mainButton(
                 context,
-                label: '팝잇 체험하기',
+                label: 'Pop it',
                 color: const Color(0xFF7CA6F7),
                 onTap:
                     () => Navigator.push(
@@ -71,7 +71,7 @@ class HomePage extends StatelessWidget {
               ),
               _mainButton(
                 context,
-                label: '피젯스피너 체험하기',
+                label: 'Spinner',
                 color: const Color(0xFFFFA726),
                 onTap:
                     () => Navigator.push(
@@ -83,7 +83,7 @@ class HomePage extends StatelessWidget {
               ),
               _mainButton(
                 context,
-                label: '스위치 체험하기',
+                label: 'Switch',
                 color: const Color(0xFF8BC34A),
                 onTap:
                     () => Navigator.push(
@@ -95,7 +95,7 @@ class HomePage extends StatelessWidget {
               ),
               _mainButton(
                 context,
-                label: '슬라임 체험하기',
+                label: 'Slime',
                 color: const Color(0xFF9C27B0),
                 onTap:
                     () => Navigator.push(
@@ -107,7 +107,7 @@ class HomePage extends StatelessWidget {
               ),
               _mainButton(
                 context,
-                label: '모든 카운트 리셋',
+                label: 'Reset',
                 color: const Color(0xFFE57373),
                 onTap: () {
                   // TODO: 카운트 리셋 기능 구현 필요

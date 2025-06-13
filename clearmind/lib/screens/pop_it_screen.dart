@@ -269,32 +269,176 @@ class _PopItScreenState extends State<PopItScreen> {
                 ),
                 child: GestureDetector(
                   onHorizontalDragEnd: (_) => _loadQuote(),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '"$quote"',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black87,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 700),
+                    transitionBuilder:
+                        (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
+                    child: Column(
+                      key: ValueKey('$quote-$author'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '"$quote"',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '- $author',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
+                        const SizedBox(height: 8),
+                        Text(
+                          '- $author',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class PopItBubble extends StatelessWidget {
+  final bool popped;
+  final Color color;
+  final VoidCallback onTap;
+  const PopItBubble({
+    super.key,
+    required this.popped,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        width: 44,
+        height: 44,
+        margin: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.13),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: CustomPaint(
+          painter: PopItBubblePainter(color: color, popped: popped),
+        ),
+      ),
+    );
+  }
+}
+
+class PopItBubblePainter extends CustomPainter {
+  final Color color;
+  final bool popped;
+  PopItBubblePainter({required this.color, required this.popped});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2;
+    // 입체감 있는 버블 그라데이션
+    final gradient = RadialGradient(
+      center: popped ? const Alignment(0.2, 0.2) : const Alignment(-0.3, -0.3),
+      radius: 0.9,
+      colors:
+          popped
+              ? [color.withOpacity(0.7), color.withOpacity(0.95)]
+              : [Colors.white.withOpacity(0.85), color],
+      stops: const [0.0, 1.0],
+    );
+    final paint =
+        Paint()
+          ..shader = gradient.createShader(
+            Rect.fromCircle(center: center, radius: r),
+          )
+          ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, r, paint);
+    // 하이라이트(윤기) 효과
+    if (!popped) {
+      final highlightPaint =
+          Paint()
+            ..color = Colors.white.withOpacity(0.18)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: center + Offset(-r * 0.25, -r * 0.25),
+          width: r * 1.1,
+          height: r * 0.45,
+        ),
+        highlightPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant PopItBubblePainter oldDelegate) {
+    return color != oldDelegate.color || popped != oldDelegate.popped;
+  }
+}
+
+class PopItBoard extends StatelessWidget {
+  final List<List<bool>> state;
+  final List<List<Color>> colors;
+  final void Function(int, int) onBubbleTap;
+  const PopItBoard({
+    super.key,
+    required this.state,
+    required this.colors,
+    required this.onBubbleTap,
+  });
+
+  static final List<BoxShadow> _boardShadows = [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.10),
+      blurRadius: 24,
+      offset: const Offset(0, 12),
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 24),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(32),
+        color: const Color(0xFFD6E7FF),
+        boxShadow: _boardShadows,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (int i = 0; i < state.length; i++)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (int j = 0; j < state[i].length; j++)
+                  PopItBubble(
+                    popped: state[i][j],
+                    color: colors[i][j],
+                    onTap: () => onBubbleTap(i, j),
+                  ),
+              ],
+            ),
         ],
       ),
     );

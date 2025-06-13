@@ -3,6 +3,7 @@ import 'screens/pop_it_screen.dart';
 import 'screens/spinner_screen.dart';
 import 'screens/switch_screen.dart';
 import 'screens/slime_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ClearMindApp extends StatelessWidget {
   const ClearMindApp({super.key});
@@ -17,6 +18,7 @@ class ClearMindApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
+        fontFamily: 'IM_Hyemin',
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -24,6 +26,7 @@ class ClearMindApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
+        fontFamily: 'IM_Hyemin',
       ),
       home: const HomePage(),
     );
@@ -45,11 +48,12 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 48),
               Text(
                 'ClearMind',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Color(0xFF7CA6F7),
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
+                  fontFamily: 'IM_Hyemin',
                 ),
               ),
               const SizedBox(height: 48),
@@ -105,11 +109,19 @@ class HomePage extends StatelessWidget {
                 context,
                 label: 'Reset',
                 color: const Color(0xFFE57373),
-                onTap: () {
-                  // TODO: 카운트 리셋 기능 구현 필요
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('아직 구현되지 않았습니다.')),
-                  );
+                onTap: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.clear();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          '모든 카운트가 리셋되었습니다.',
+                          style: TextStyle(fontFamily: 'IM_Hyemin'),
+                        ),
+                      ),
+                    );
+                  }
                 },
               ),
               const SizedBox(height: 32),
@@ -146,6 +158,7 @@ class HomePage extends StatelessWidget {
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
+                  fontFamily: 'IM_Hyemin',
                 ),
               ),
             ),

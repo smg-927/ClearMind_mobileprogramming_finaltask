@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import '../quotes_provider.dart';
+import 'dart:async';
 import 'settings_screen.dart';
+import '../quotes_provider.dart';
 
 class SlimeScreen extends StatefulWidget {
   const SlimeScreen({super.key});
@@ -12,45 +13,49 @@ class SlimeScreen extends StatefulWidget {
 
 class _SlimeScreenState extends State<SlimeScreen>
     with SingleTickerProviderStateMixin {
-  int count = 0;
+  Offset _position = Offset.zero;
   late AnimationController _controller;
   late Animation<double> _scaleAnim;
-  int? _activeVertex;
-  Offset? _touchPos;
+
+  // 물방울 관련
+  final List<SlimeDrop> _drops = [];
+  Timer? _dropTimer;
+  int count = 0;
+
+  // 명언 관련
   String quote = '';
   String author = '';
+
+  // 슬라임 색상 변화
+  double _hue = 90.0; // 시작 색상 (연두)
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 120),
+      duration: const Duration(milliseconds: 250),
       lowerBound: 0.0,
       upperBound: 1.0,
     );
     _scaleAnim = Tween<double>(
       begin: 1.0,
-      end: 1.12,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+      end: 1.15,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
+    _startDropLoop();
+    _startColorLoop();
     _loadQuote();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails details) async {
-    setState(() {
-      count++;
-      _touchPos = details.localPosition;
-    });
-    await _controller.forward();
-    await _controller.reverse();
-    setState(() {
-      _touchPos = null;
+  void _startColorLoop() {
+    Timer.periodic(const Duration(milliseconds: 30), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _hue = (_hue + 0.5) % 360;
+      });
     });
   }
 
@@ -62,13 +67,78 @@ class _SlimeScreenState extends State<SlimeScreen>
     });
   }
 
+  void _startDropLoop() {
+    _dropTimer?.cancel();
+    _dropTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      bool changed = false;
+      for (int i = _drops.length - 1; i >= 0; i--) {
+        final drop = _drops[i];
+        drop.position += drop.velocity;
+        drop.velocity += const Offset(0, 0.3); // 중력
+        drop.size *= 0.98;
+        drop.opacity -= 0.018;
+        if (drop.opacity <= 0 || drop.size < 2) {
+          _drops.removeAt(i);
+          changed = true;
+        } else {
+          changed = true;
+        }
+      }
+      if (changed && mounted) setState(() {});
+    });
+  }
+
+  void _createDrops(Offset center) {
+    final random = Random();
+    setState(() {
+      count++;
+    });
+    for (int i = 0; i < 6; i++) {
+      final angle = (i / 6) * 2 * pi + random.nextDouble() * 0.5;
+      final speed = 3.0 + random.nextDouble() * 2;
+      _drops.add(
+        SlimeDrop(
+          position: center,
+          velocity: Offset(cos(angle) * speed, sin(angle) * speed),
+          size: 14.0 + random.nextDouble() * 6,
+          opacity: 0.7 + random.nextDouble() * 0.3,
+          color: HSLColor.fromAHSL(1.0, _hue, 0.7, 0.6).toColor(),
+        ),
+      );
+    }
+  }
+
+  void _onPanStart(DragStartDetails details) {
+    _controller.forward();
+    // 슬라임 중앙 좌표 계산
+    final RenderBox box = context.findRenderObject() as RenderBox;
+    final slimeCenter = box.size.center(_position);
+    _createDrops(slimeCenter);
+  }
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    setState(() {
+      _position += details.delta;
+    });
+  }
+
+  void _onPanEnd(DragEndDetails details) {
+    _controller.reverse();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _dropTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bgColor = const Color(0xFFF3FFE3);
-    final mainColor = const Color(0xFFA8D672);
-    final iconBg = mainColor;
+    final slimeColor = HSLColor.fromAHSL(1.0, _hue, 0.7, 0.6).toColor();
+    final slimeColorDark = HSLColor.fromAHSL(1.0, _hue, 0.7, 0.45).toColor();
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: const Color(0xFFF3FFE3),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
@@ -85,7 +155,7 @@ class _SlimeScreenState extends State<SlimeScreen>
                     backgroundColor: Colors.white,
                     radius: 24,
                     child: IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.arrow_back,
                         color: Colors.black,
                         size: 28,
@@ -101,7 +171,7 @@ class _SlimeScreenState extends State<SlimeScreen>
                     child: Text(
                       '$count',
                       style: TextStyle(
-                        color: mainColor,
+                        color: slimeColor,
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.5,
@@ -140,49 +210,44 @@ class _SlimeScreenState extends State<SlimeScreen>
       ),
       body: Stack(
         children: [
-          Align(
-            alignment: Alignment.center,
-            child: SizedBox(
-              width: 220,
-              height: 220,
+          // 물방울 그리기
+          ..._drops.map(
+            (drop) => Positioned(
+              left: drop.position.dx,
+              top: drop.position.dy,
+              child: Opacity(
+                opacity: drop.opacity,
+                child: Container(
+                  width: drop.size,
+                  height: drop.size,
+                  decoration: BoxDecoration(
+                    color: drop.color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Center(
+            child: Transform.translate(
+              offset: _position,
               child: GestureDetector(
-                onTapDown: _onTapDown,
+                onPanStart: _onPanStart,
+                onPanUpdate: _onPanUpdate,
+                onPanEnd: _onPanEnd,
                 child: AnimatedBuilder(
-                  animation: _controller,
+                  animation: _scaleAnim,
                   builder: (context, child) {
                     return Transform.scale(
                       scale: _scaleAnim.value,
                       child: child,
                     );
                   },
-                  child: Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: mainColor.withValues(alpha: 0.25),
-                          blurRadius: 48,
-                          spreadRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: CustomPaint(
-                      painter: _HexagonInteractivePainter(
-                        mainColor,
-                        _controller.value,
-                        _touchPos,
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 60,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: mainColor.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                      ),
+                  child: CustomPaint(
+                    size: const Size(220, 220),
+                    painter: SimpleHexagonPainter(
+                      color: slimeColor,
+                      colorDark: slimeColorDark,
                     ),
                   ),
                 ),
@@ -201,27 +266,34 @@ class _SlimeScreenState extends State<SlimeScreen>
                 ),
                 child: GestureDetector(
                   onHorizontalDragEnd: (_) => _loadQuote(),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '"$quote"',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black87,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 700),
+                    transitionBuilder:
+                        (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
+                    child: Column(
+                      key: ValueKey('$quote-$author'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '"$quote"',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '- $author',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
+                        const SizedBox(height: 8),
+                        Text(
+                          '- $author',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -233,44 +305,35 @@ class _SlimeScreenState extends State<SlimeScreen>
   }
 }
 
-class _HexagonInteractivePainter extends CustomPainter {
-  final Color color;
-  final double animValue;
-  final Offset? touchPos;
-  _HexagonInteractivePainter(this.color, this.animValue, this.touchPos);
+class SlimeDrop {
+  Offset position;
+  Offset velocity;
+  double size;
+  double opacity;
+  Color color;
+  SlimeDrop({
+    required this.position,
+    required this.velocity,
+    required this.size,
+    required this.opacity,
+    required this.color,
+  });
+}
 
+class SimpleHexagonPainter extends CustomPainter {
+  final Color color;
+  final Color colorDark;
+  SimpleHexagonPainter({required this.color, required this.colorDark});
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.fill;
-    final path = Path();
-    final n = 6;
+    final n = 12;
     final r = size.width / 2;
     final center = Offset(size.width / 2, size.height / 2);
-    int? activeIdx;
-    if (touchPos != null) {
-      double minDist = double.infinity;
-      for (int i = 0; i < n; i++) {
-        final angle = (pi / 3) * i - pi / 2;
-        final vx = center.dx + r * cos(angle) * 0.92;
-        final vy = center.dy + r * sin(angle) * 0.92;
-        final d = (touchPos! - Offset(vx, vy)).distance;
-        if (d < minDist) {
-          minDist = d;
-          activeIdx = i;
-        }
-      }
-    }
+    final path = Path();
     for (int i = 0; i < n; i++) {
-      final angle = (pi / 3) * i - pi / 2;
-      double scale = 0.92;
-      if (activeIdx != null && i == activeIdx) {
-        scale += 0.13 * animValue;
-      }
-      final x = center.dx + r * cos(angle) * scale;
-      final y = center.dy + r * sin(angle) * scale;
+      final angle12 = (2 * pi / n) * i - pi / 2;
+      final x = center.dx + r * cos(angle12) * 0.92;
+      final y = center.dy + r * sin(angle12) * 0.92;
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -278,12 +341,34 @@ class _HexagonInteractivePainter extends CustomPainter {
       }
     }
     path.close();
+
+    // 1. 슬라임 기본 색상 그라데이션
+    final gradient = RadialGradient(
+      center: const Alignment(-0.3, -0.3),
+      radius: 0.9,
+      colors: [color, colorDark],
+      stops: const [0.5, 1.0],
+    );
+    final rect = Rect.fromCircle(center: center, radius: r * 0.92);
+    final paint =
+        Paint()
+          ..shader = gradient.createShader(rect)
+          ..style = PaintingStyle.fill;
     canvas.drawPath(path, paint);
+
+    // 2. 하이라이트(윤기) 효과: 반투명 흰색 타원
+    final highlightPaint =
+        Paint()
+          ..color = Colors.white.withOpacity(0.22)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    final highlightRect = Rect.fromCenter(
+      center: center + Offset(-r * 0.28, -r * 0.28),
+      width: r * 0.9,
+      height: r * 0.38,
+    );
+    canvas.drawOval(highlightRect, highlightPaint);
   }
 
   @override
-  bool shouldRepaint(covariant _HexagonInteractivePainter oldDelegate) {
-    return oldDelegate.animValue != animValue ||
-        oldDelegate.touchPos != touchPos;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

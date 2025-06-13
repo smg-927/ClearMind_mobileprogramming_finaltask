@@ -52,8 +52,10 @@ class HomePage extends StatelessWidget {
                 style: TextStyle(
                   color: Color(0xFF7CA6F7),
                   fontSize: 48,
+                  fontFamily: 'IM_Hyemin',
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
               const SizedBox(height: 48),
@@ -110,7 +112,6 @@ class HomePage extends StatelessWidget {
                 label: 'Reset',
                 color: const Color(0xFFE57373),
                 onTap: () {
-                  // TODO: 카운트 리셋 기능 구현 필요
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('아직 구현되지 않았습니다.')),
                   );

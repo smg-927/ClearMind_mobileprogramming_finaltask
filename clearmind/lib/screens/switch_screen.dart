@@ -179,27 +179,34 @@ class _SwitchScreenState extends State<SwitchScreen> {
                 ),
                 child: GestureDetector(
                   onHorizontalDragEnd: (_) => _loadQuote(),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '"$quote"',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                          color: isOn ? Colors.black87 : Colors.white,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 700),
+                    transitionBuilder:
+                        (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
+                    child: Column(
+                      key: ValueKey('$quote-$author'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '"$quote"',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '- $author',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isOn ? Colors.black54 : Colors.white,
+                        const SizedBox(height: 8),
+                        Text(
+                          '- $author',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

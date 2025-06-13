@@ -24,7 +24,9 @@ class SoundService {
       // 랜덤하게 사운드 선택
       final soundFile = _popSounds[_random.nextInt(_popSounds.length)];
       await _audioPlayer.play(AssetSource(soundFile));
-    } catch (e) {}
+    } catch (e) {
+      // 오류 무시
+    }
   }
 
   // 음소거 토글

@@ -14,7 +14,6 @@ class _SpinnerScreenState extends State<SpinnerScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   double _rotation = 0.0;
-  double _lastRotation = 0.0;
   double _velocity = 0.0;
   double _totalSpin = 0.0; // 누적 회전량
   Offset? _lastTouchPos;
@@ -22,6 +21,7 @@ class _SpinnerScreenState extends State<SpinnerScreen>
   double _lastDeltaAngle = 0.0;
   String quote = '';
   String author = '';
+  double _hue = 200.0;
 
   @override
   void initState() {
@@ -39,6 +39,7 @@ class _SpinnerScreenState extends State<SpinnerScreen>
           _velocity = 0.0;
           _controller.stop();
         }
+        _hue = (_hue + 0.7) % 360;
       });
     });
     _loadQuote();
@@ -52,7 +53,6 @@ class _SpinnerScreenState extends State<SpinnerScreen>
 
   void _onPanStart(DragStartDetails details) {
     _controller.stop();
-    _lastRotation = _rotation;
     RenderBox box = context.findRenderObject() as RenderBox;
     _lastTouchPos = box.globalToLocal(details.globalPosition);
     final center = box.size.center(Offset.zero);
@@ -80,7 +80,6 @@ class _SpinnerScreenState extends State<SpinnerScreen>
   }
 
   void _onPanEnd(DragEndDetails details) {
-    // 마지막 드래그 각도 변화 방향(부호)로 관성 방향 결정
     double direction = _lastDeltaAngle.sign == 0 ? 1 : _lastDeltaAngle.sign;
     _velocity = direction * details.velocity.pixelsPerSecond.distance * 0.00004;
     _controller.repeat();
@@ -99,8 +98,13 @@ class _SpinnerScreenState extends State<SpinnerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final spinnerColor = HSLColor.fromAHSL(1.0, _hue, 0.7, 0.55).toColor();
+    final spinnerColor2 =
+        HSLColor.fromAHSL(1.0, (_hue + 60) % 360, 0.7, 0.65).toColor();
+    final spinnerColor3 =
+        HSLColor.fromAHSL(1.0, (_hue + 120) % 360, 0.7, 0.55).toColor();
     return Scaffold(
-      backgroundColor: const Color(0xFF67A6F7), // 연한 파랑 배경
+      backgroundColor: const Color(0xFF67A6F7),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
@@ -183,57 +187,13 @@ class _SpinnerScreenState extends State<SpinnerScreen>
                 onPanEnd: _onPanEnd,
                 child: Transform.rotate(
                   angle: _rotation,
-                  child: Container(
-                    width: 260,
-                    height: 260,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0x335A7ACD), // 반투명 진한 파랑
-                      border: Border.all(color: Colors.white, width: 5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.18),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // 스피너 팔 3개
-                        for (int i = 0; i < 3; i++)
-                          Transform.rotate(
-                            angle: i * 2 * 3.1415926 / 3,
-                            child: Align(
-                              alignment: Alignment.topCenter,
-                              child: Container(
-                                width: 24,
-                                height: 110,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.32),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                        // 중앙 원
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.10),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                  child: CustomPaint(
+                    size: const Size(260, 260),
+                    painter: FancySpinnerPainter(
+                      color1: spinnerColor,
+                      color2: spinnerColor2,
+                      color3: spinnerColor3,
+                      rotation: _rotation,
                     ),
                   ),
                 ),
@@ -252,27 +212,34 @@ class _SpinnerScreenState extends State<SpinnerScreen>
                 ),
                 child: GestureDetector(
                   onHorizontalDragEnd: (_) => _loadQuote(),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '"$quote"',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black87,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 700),
+                    transitionBuilder:
+                        (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
+                    child: Column(
+                      key: ValueKey('$quote-$author'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '"$quote"',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '- $author',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
+                        const SizedBox(height: 8),
+                        Text(
+                          '- $author',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -281,5 +248,118 @@ class _SpinnerScreenState extends State<SpinnerScreen>
         ],
       ),
     );
+  }
+}
+
+class FancySpinnerPainter extends CustomPainter {
+  final Color color1;
+  final Color color2;
+  final Color color3;
+  final double rotation;
+  FancySpinnerPainter({
+    required this.color1,
+    required this.color2,
+    required this.color3,
+    required this.rotation,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 8;
+    final List<Color> armColors = [color1, color2, color3];
+    final List<Color> armShadowColors = [
+      color1.withOpacity(0.3),
+      color2.withOpacity(0.3),
+      color3.withOpacity(0.3),
+    ];
+    // 팔 3개
+    for (int i = 0; i < 3; i++) {
+      final angle = i * 2 * pi / 3;
+      final armPaint =
+          Paint()
+            ..shader = LinearGradient(
+              colors: [armColors[i], Colors.white.withOpacity(0.7)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ).createShader(
+              Rect.fromLTWH(center.dx - 12, center.dy - radius, 24, radius),
+            );
+      final shadowPaint =
+          Paint()
+            ..color = armShadowColors[i]
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+      // 그림자
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(angle);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(-12, -radius, 24, 110),
+          const Radius.circular(12),
+        ),
+        shadowPaint,
+      );
+      // 팔
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(-12, -radius, 24, 110),
+          const Radius.circular(12),
+        ),
+        armPaint,
+      );
+      // 팔 끝에 작은 원
+      final tipColor = Color.lerp(armColors[i], Colors.white, 0.5)!;
+      canvas.drawCircle(
+        Offset(0, -radius + 110),
+        18,
+        Paint()..color = tipColor.withOpacity(0.85),
+      );
+      canvas.restore();
+    }
+    // 중앙 원 (반짝임 효과)
+    final centerGradient = RadialGradient(
+      colors: [Colors.white, color1.withOpacity(0.7), color2.withOpacity(0.5)],
+      stops: const [0.0, 0.7, 1.0],
+    );
+    canvas.drawCircle(
+      center,
+      44 / 2,
+      Paint()
+        ..shader = centerGradient.createShader(
+          Rect.fromCircle(center: center, radius: 22),
+        ),
+    );
+    // 중앙 반짝임 highlight
+    canvas.drawCircle(
+      center + Offset(-8, -8),
+      8,
+      Paint()..color = Colors.white.withOpacity(0.18),
+    );
+    // 외곽 원
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = Colors.white.withOpacity(0.18)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5,
+    );
+    // 전체 그림자
+    canvas.drawCircle(
+      center,
+      radius - 10,
+      Paint()
+        ..color = Colors.black.withOpacity(0.08)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant FancySpinnerPainter oldDelegate) {
+    return color1 != oldDelegate.color1 ||
+        color2 != oldDelegate.color2 ||
+        color3 != oldDelegate.color3 ||
+        rotation != oldDelegate.rotation;
   }
 }

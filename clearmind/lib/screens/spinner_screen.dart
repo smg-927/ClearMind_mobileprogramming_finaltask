@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../quotes_provider.dart';
+import 'settings_screen.dart';
 
 class SpinnerScreen extends StatefulWidget {
   const SpinnerScreen({super.key});
@@ -110,13 +111,22 @@ class _SpinnerScreenState extends State<SpinnerScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.purpleAccent,
-                    size: 32,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 24,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.black,
+                        size: 28,
+                      ),
+                      padding: EdgeInsets.zero,
+                      iconSize: 28,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
                 ),
                 Expanded(
                   child: Center(
@@ -131,13 +141,29 @@ class _SpinnerScreenState extends State<SpinnerScreen>
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.settings,
-                    color: Colors.white,
-                    size: 28,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 24,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.settings,
+                        color: Colors.black,
+                        size: 28,
+                      ),
+                      padding: EdgeInsets.zero,
+                      iconSize: 28,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  onPressed: () {},
                 ),
               ],
             ),

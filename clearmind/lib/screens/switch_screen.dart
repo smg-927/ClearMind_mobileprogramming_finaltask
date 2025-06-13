@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../quotes_provider.dart';
+import 'settings_screen.dart';
 
 class SwitchScreen extends StatefulWidget {
   const SwitchScreen({super.key});
@@ -12,6 +13,7 @@ class _SwitchScreenState extends State<SwitchScreen> {
   bool isOn = true;
   String quote = '';
   String author = '';
+  int count = 0;
 
   @override
   void initState() {
@@ -52,20 +54,29 @@ class _SwitchScreenState extends State<SwitchScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Color(0xFF7CA6F7),
-                    size: 32,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 24,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.black,
+                        size: 28,
+                      ),
+                      padding: EdgeInsets.zero,
+                      iconSize: 28,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
                 ),
                 Expanded(
                   child: Center(
                     child: Text(
-                      isOn ? '1' : '0',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      '$count',
+                      style: TextStyle(
+                        color: isOn ? Colors.black : Colors.white,
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.5,
@@ -73,13 +84,29 @@ class _SwitchScreenState extends State<SwitchScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.settings,
-                    color: Color(0xFF7CA6F7),
-                    size: 28,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 24,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.settings,
+                        color: Colors.black,
+                        size: 28,
+                      ),
+                      padding: EdgeInsets.zero,
+                      iconSize: 28,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  onPressed: () {},
                 ),
               ],
             ),
@@ -97,6 +124,7 @@ class _SwitchScreenState extends State<SwitchScreen> {
                 onTap: () {
                   setState(() {
                     isOn = !isOn;
+                    count++;
                   });
                 },
                 child: AnimatedContainer(
@@ -157,18 +185,18 @@ class _SwitchScreenState extends State<SwitchScreen> {
                       Text(
                         '"$quote"',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontStyle: FontStyle.italic,
-                          color: Colors.black87,
+                          color: isOn ? Colors.black87 : Colors.white,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '- $author',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          color: Colors.black54,
+                          color: isOn ? Colors.black54 : Colors.white,
                         ),
                       ),
                     ],

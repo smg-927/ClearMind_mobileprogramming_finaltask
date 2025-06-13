@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import '../services/sound_service.dart';
 import '../quotes_provider.dart';
+import 'settings_screen.dart';
 
 class PopItScreen extends StatefulWidget {
   const PopItScreen({super.key});
@@ -92,13 +93,22 @@ class _PopItScreenState extends State<PopItScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.purpleAccent,
-                    size: 32,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 24,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.black,
+                        size: 28,
+                      ),
+                      padding: EdgeInsets.zero,
+                      iconSize: 28,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
                 ),
                 Expanded(
                   child: Center(
@@ -113,13 +123,29 @@ class _PopItScreenState extends State<PopItScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.settings,
-                    color: Colors.white,
-                    size: 28,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 24,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.settings,
+                        color: Colors.black,
+                        size: 28,
+                      ),
+                      padding: EdgeInsets.zero,
+                      iconSize: 28,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  onPressed: () {},
                 ),
               ],
             ),
@@ -186,15 +212,17 @@ class _PopItScreenState extends State<PopItScreen> {
                                                 ? [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withOpacity(0.08),
+                                                        .withValues(
+                                                          alpha: 0.08,
+                                                        ),
                                                     blurRadius: 2,
                                                     offset: const Offset(0, 1),
                                                   ),
                                                 ]
                                                 : [
                                                   BoxShadow(
-                                                    color: color.withOpacity(
-                                                      0.2,
+                                                    color: color.withValues(
+                                                      alpha: 0.2,
                                                     ),
                                                     blurRadius: 6,
                                                     offset: const Offset(0, 2),
@@ -209,7 +237,7 @@ class _PopItScreenState extends State<PopItScreen> {
                                                   height: 22,
                                                   decoration: BoxDecoration(
                                                     color: Colors.white
-                                                        .withOpacity(0.7),
+                                                        .withValues(alpha: 0.7),
                                                     shape: BoxShape.circle,
                                                   ),
                                                 ),

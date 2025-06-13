@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
 import 'screens/pop_it_screen.dart';
 import 'screens/spinner_screen.dart';
 import 'screens/switch_screen.dart';

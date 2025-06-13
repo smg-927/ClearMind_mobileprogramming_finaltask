@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../quotes_provider.dart';
+import 'settings_screen.dart';
 
 class SlimeScreen extends StatefulWidget {
   const SlimeScreen({super.key});
@@ -81,14 +82,16 @@ class _SlimeScreenState extends State<SlimeScreen>
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: CircleAvatar(
-                    backgroundColor: iconBg,
-                    radius: 28 / 2,
+                    backgroundColor: Colors.white,
+                    radius: 24,
                     child: IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.arrow_back,
-                        color: Colors.white,
-                        size: 24,
+                        color: Colors.black,
+                        size: 28,
                       ),
+                      padding: EdgeInsets.zero,
+                      iconSize: 28,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
@@ -109,15 +112,24 @@ class _SlimeScreenState extends State<SlimeScreen>
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: CircleAvatar(
-                    backgroundColor: iconBg,
-                    radius: 28 / 2,
+                    backgroundColor: Colors.white,
+                    radius: 24,
                     child: IconButton(
                       icon: const Icon(
                         Icons.settings,
-                        color: Colors.white,
-                        size: 22,
+                        color: Colors.black,
+                        size: 28,
                       ),
-                      onPressed: () {},
+                      padding: EdgeInsets.zero,
+                      iconSize: 28,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

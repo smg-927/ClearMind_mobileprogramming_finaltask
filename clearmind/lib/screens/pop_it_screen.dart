@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../services/sound_service.dart';
+import '../quotes_provider.dart';
 
 class PopItScreen extends StatefulWidget {
   const PopItScreen({super.key});
@@ -28,6 +29,9 @@ class _PopItScreenState extends State<PopItScreen> {
   ];
   final Random _random = Random();
   late List<List<Color>> bubbleColorMap;
+  int count = 0;
+  String quote = '';
+  String author = '';
 
   @override
   void initState() {
@@ -41,6 +45,15 @@ class _PopItScreenState extends State<PopItScreen> {
         (_) => bubbleColors[_random.nextInt(bubbleColors.length)],
       ),
     );
+    _loadQuote();
+  }
+
+  Future<void> _loadQuote() async {
+    final q = await getRandomQuote();
+    setState(() {
+      quote = q['quote'] ?? '';
+      author = q['author'] ?? '';
+    });
   }
 
   @override
@@ -52,6 +65,7 @@ class _PopItScreenState extends State<PopItScreen> {
   void _toggleBubble(int row, int col) {
     setState(() {
       bubbles[row][col] = !bubbles[row][col];
+      count++;
     });
     _soundService.playPopSound();
   }
@@ -86,11 +100,11 @@ class _PopItScreenState extends State<PopItScreen> {
                   ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
-                const Expanded(
+                Expanded(
                   child: Center(
                     child: Text(
-                      '3',
-                      style: TextStyle(
+                      '$count',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
@@ -112,73 +126,148 @@ class _PopItScreenState extends State<PopItScreen> {
           ),
         ),
       ),
-      body: Center(
-        child: AspectRatio(
-          aspectRatio: 1.0,
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF7ED957), // 연두색
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.black, width: 5),
-            ),
-            margin: const EdgeInsets.all(24),
-            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(rows, (row) {
-                return SizedBox(
-                  height: 44,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(columns, (col) {
-                      final isPopped = bubbles[row][col];
-                      final color = rowColors[row];
-                      // 진한 색상 계산 (isPopped일 때 더 진하게)
-                      final poppedColor =
-                          HSLColor.fromColor(color)
-                              .withLightness(
-                                (HSLColor.fromColor(color).lightness * 0.7)
-                                    .clamp(0.0, 1.0),
-                              )
-                              .toColor();
-                      return Align(
-                        alignment: Alignment.center,
-                        child: GestureDetector(
-                          onTap: () => _toggleBubble(row, col),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            curve: Curves.easeInOut,
-                            width: isPopped ? 28 : 36,
-                            height: isPopped ? 28 : 36,
-                            margin: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isPopped ? poppedColor : color,
-                              border: Border.all(color: Colors.black, width: 3),
-                            ),
-                            child:
-                                !isPopped
-                                    ? Center(
-                                      child: Container(
-                                        width: 22,
-                                        height: 22,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.7),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 340,
+              height: 340,
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF7ED957), // 연두색
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(color: Colors.black, width: 5),
+                  ),
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(rows, (row) {
+                      return Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: List.generate(columns, (col) {
+                            final isPopped = bubbles[row][col];
+                            final color = rowColors[row];
+                            final poppedColor =
+                                HSLColor.fromColor(color)
+                                    .withLightness(
+                                      (HSLColor.fromColor(color).lightness *
+                                              0.7)
+                                          .clamp(0.0, 1.0),
                                     )
-                                    : null,
-                          ),
+                                    .toColor();
+                            return Flexible(
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: Center(
+                                  child: GestureDetector(
+                                    onTap: () => _toggleBubble(row, col),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 180,
+                                      ),
+                                      curve: Curves.easeInOut,
+                                      width: isPopped ? 32 : 40,
+                                      height: isPopped ? 32 : 40,
+                                      margin: const EdgeInsets.all(2),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isPopped ? poppedColor : color,
+                                        border: Border.all(
+                                          color: Colors.black,
+                                          width: 3,
+                                        ),
+                                        boxShadow:
+                                            isPopped
+                                                ? [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.08),
+                                                    blurRadius: 2,
+                                                    offset: const Offset(0, 1),
+                                                  ),
+                                                ]
+                                                : [
+                                                  BoxShadow(
+                                                    color: color.withOpacity(
+                                                      0.2,
+                                                    ),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                      ),
+                                      child:
+                                          !isPopped
+                                              ? Center(
+                                                child: Container(
+                                                  width: 22,
+                                                  height: 22,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white
+                                                        .withOpacity(0.7),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              )
+                                              : null,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
                         ),
                       );
                     }),
                   ),
-                );
-              }),
+                ),
+              ),
             ),
           ),
-        ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(
+                  bottom: 16,
+                  left: 24,
+                  right: 24,
+                  top: 8,
+                ),
+                child: GestureDetector(
+                  onHorizontalDragEnd: (_) => _loadQuote(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '"$quote"',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '- $author',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

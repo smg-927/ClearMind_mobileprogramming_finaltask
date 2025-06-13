@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../quotes_provider.dart';
 
 class SpinnerScreen extends StatefulWidget {
   const SpinnerScreen({super.key});
@@ -18,6 +19,8 @@ class _SpinnerScreenState extends State<SpinnerScreen>
   Offset? _lastTouchPos;
   double? _lastTouchAngle;
   double _lastDeltaAngle = 0.0;
+  String quote = '';
+  String author = '';
 
   @override
   void initState() {
@@ -37,6 +40,7 @@ class _SpinnerScreenState extends State<SpinnerScreen>
         }
       });
     });
+    _loadQuote();
   }
 
   @override
@@ -82,6 +86,14 @@ class _SpinnerScreenState extends State<SpinnerScreen>
     _lastTouchPos = null;
     _lastTouchAngle = null;
     _lastDeltaAngle = 0.0;
+  }
+
+  Future<void> _loadQuote() async {
+    final q = await getRandomQuote();
+    setState(() {
+      quote = q['quote'] ?? '';
+      author = q['author'] ?? '';
+    });
   }
 
   @override
@@ -132,68 +144,115 @@ class _SpinnerScreenState extends State<SpinnerScreen>
           ),
         ),
       ),
-      body: Center(
-        child: GestureDetector(
-          onPanStart: _onPanStart,
-          onPanUpdate: _onPanUpdate,
-          onPanEnd: _onPanEnd,
-          child: Transform.rotate(
-            angle: _rotation,
-            child: Container(
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: SizedBox(
               width: 260,
               height: 260,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0x335A7ACD), // 반투명 진한 파랑
-                border: Border.all(color: Colors.white, width: 5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.18),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // 스피너 팔 3개
-                  for (int i = 0; i < 3; i++)
-                    Transform.rotate(
-                      angle: i * 2 * 3.1415926 / 3,
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: Container(
-                          width: 24,
-                          height: 110,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.32),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  // 중앙 원
-                  Container(
-                    width: 44,
-                    height: 44,
+              child: GestureDetector(
+                onPanStart: _onPanStart,
+                onPanUpdate: _onPanUpdate,
+                onPanEnd: _onPanEnd,
+                child: Transform.rotate(
+                  angle: _rotation,
+                  child: Container(
+                    width: 260,
+                    height: 260,
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       shape: BoxShape.circle,
+                      color: const Color(0x335A7ACD), // 반투명 진한 파랑
+                      border: Border.all(color: Colors.white, width: 5),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.10),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withValues(alpha: 0.18),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // 스피너 팔 3개
+                        for (int i = 0; i < 3; i++)
+                          Transform.rotate(
+                            angle: i * 2 * 3.1415926 / 3,
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Container(
+                                width: 24,
+                                height: 110,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.32),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        // 중앙 원
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.10),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(
+                  bottom: 16,
+                  left: 24,
+                  right: 24,
+                  top: 8,
+                ),
+                child: GestureDetector(
+                  onHorizontalDragEnd: (_) => _loadQuote(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '"$quote"',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '- $author',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

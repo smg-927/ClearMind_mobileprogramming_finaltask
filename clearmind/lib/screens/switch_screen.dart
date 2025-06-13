@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../quotes_provider.dart';
 
 class SwitchScreen extends StatefulWidget {
   const SwitchScreen({super.key});
@@ -9,6 +10,22 @@ class SwitchScreen extends StatefulWidget {
 
 class _SwitchScreenState extends State<SwitchScreen> {
   bool isOn = true;
+  String quote = '';
+  String author = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuote();
+  }
+
+  Future<void> _loadQuote() async {
+    final q = await getRandomQuote();
+    setState(() {
+      quote = q['quote'] ?? '';
+      author = q['author'] ?? '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +35,7 @@ class _SwitchScreenState extends State<SwitchScreen> {
     final handleColor = Colors.white;
     final shadow = [
       BoxShadow(
-        color: Colors.black.withOpacity(0.15),
+        color: Colors.black.withValues(alpha: 0.15),
         blurRadius: 18,
         offset: const Offset(0, 8),
       ),
@@ -69,51 +86,98 @@ class _SwitchScreenState extends State<SwitchScreen> {
           ),
         ),
       ),
-      body: Center(
-        child: GestureDetector(
-          onTap: () {
-            setState(() {
-              isOn = !isOn;
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeInOut,
-            width: 140,
-            height: 200,
-            decoration: BoxDecoration(
-              color: switchColor,
-              borderRadius: BorderRadius.circular(60),
-              boxShadow: shadow,
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                AnimatedPositioned(
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 140,
+              height: 200,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    isOn = !isOn;
+                  });
+                },
+                child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeInOut,
-                  top: isOn ? 28 : 110,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: handleColor,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                  width: 140,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: switchColor,
+                    borderRadius: BorderRadius.circular(60),
+                    boxShadow: shadow,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeInOut,
+                        top: isOn ? 28 : 110,
+                        left: 20,
+                        right: 20,
+                        child: Container(
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: handleColor,
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(
+                  bottom: 16,
+                  left: 24,
+                  right: 24,
+                  top: 8,
+                ),
+                child: GestureDetector(
+                  onHorizontalDragEnd: (_) => _loadQuote(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '"$quote"',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '- $author',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

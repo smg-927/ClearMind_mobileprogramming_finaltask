@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../quotes_provider.dart';
 
 class SlimeScreen extends StatefulWidget {
   const SlimeScreen({super.key});
@@ -15,6 +16,8 @@ class _SlimeScreenState extends State<SlimeScreen>
   late Animation<double> _scaleAnim;
   int? _activeVertex;
   Offset? _touchPos;
+  String quote = '';
+  String author = '';
 
   @override
   void initState() {
@@ -29,6 +32,7 @@ class _SlimeScreenState extends State<SlimeScreen>
       begin: 1.0,
       end: 1.12,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _loadQuote();
   }
 
   @override
@@ -46,6 +50,14 @@ class _SlimeScreenState extends State<SlimeScreen>
     await _controller.reverse();
     setState(() {
       _touchPos = null;
+    });
+  }
+
+  Future<void> _loadQuote() async {
+    final q = await getRandomQuote();
+    setState(() {
+      quote = q['quote'] ?? '';
+      author = q['author'] ?? '';
     });
   }
 
@@ -114,46 +126,96 @@ class _SlimeScreenState extends State<SlimeScreen>
           ),
         ),
       ),
-      body: Center(
-        child: GestureDetector(
-          onTapDown: _onTapDown,
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Transform.scale(scale: _scaleAnim.value, child: child);
-            },
-            child: Container(
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: SizedBox(
               width: 220,
               height: 220,
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: mainColor.withOpacity(0.25),
-                    blurRadius: 48,
-                    spreadRadius: 8,
-                  ),
-                ],
-              ),
-              child: CustomPaint(
-                painter: _HexagonInteractivePainter(
-                  mainColor,
-                  _controller.value,
-                  _touchPos,
-                ),
-                child: Center(
+              child: GestureDetector(
+                onTapDown: _onTapDown,
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _scaleAnim.value,
+                      child: child,
+                    );
+                  },
                   child: Container(
-                    width: 60,
-                    height: 28,
+                    width: 220,
+                    height: 220,
                     decoration: BoxDecoration(
-                      color: mainColor.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: mainColor.withValues(alpha: 0.25),
+                          blurRadius: 48,
+                          spreadRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: CustomPaint(
+                      painter: _HexagonInteractivePainter(
+                        mainColor,
+                        _controller.value,
+                        _touchPos,
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 60,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: mainColor.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(
+                  bottom: 16,
+                  left: 24,
+                  right: 24,
+                  top: 8,
+                ),
+                child: GestureDetector(
+                  onHorizontalDragEnd: (_) => _loadQuote(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '"$quote"',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '- $author',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

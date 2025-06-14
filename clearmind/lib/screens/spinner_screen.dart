@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import '../quotes_provider.dart';
 import 'settings_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SpinnerScreen extends StatefulWidget {
   const SpinnerScreen({super.key});
@@ -26,6 +27,7 @@ class _SpinnerScreenState extends State<SpinnerScreen>
   @override
   void initState() {
     super.initState();
+    _loadCount();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -45,8 +47,21 @@ class _SpinnerScreenState extends State<SpinnerScreen>
     _loadQuote();
   }
 
+  Future<void> _saveCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('spinner_count', _totalSpin);
+  }
+
+  Future<void> _loadCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _totalSpin = prefs.getDouble('spinner_count') ?? 0.0;
+    });
+  }
+
   @override
   void dispose() {
+    _saveCount();
     _controller.dispose();
     super.dispose();
   }

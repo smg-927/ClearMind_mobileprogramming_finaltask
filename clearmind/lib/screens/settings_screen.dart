@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/sound_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -10,6 +12,30 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool soundOn = true;
   bool vibrationOn = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      soundOn = prefs.getBool('sound_on') ?? true;
+      vibrationOn = prefs.getBool('vibration_on') ?? true;
+    });
+    // SoundService에 음소거 상태 적용
+    if (!soundOn) {
+      SoundService().toggleMute();
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sound_on', soundOn);
+    await prefs.setBool('vibration_on', vibrationOn);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +65,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       padding: EdgeInsets.zero,
                       iconSize: 28,
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () {
+                        _saveSettings();
+                        Navigator.of(context).pop();
+                      },
                     ),
                   ),
                 ),
@@ -90,6 +119,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() {
                       soundOn = val;
                     });
+                    // SoundService 음소거 상태 변경
+                    if (!val) {
+                      SoundService().toggleMute();
+                    } else {
+                      SoundService().toggleMute();
+                    }
                   },
                   secondary: const Icon(
                     Icons.volume_up,

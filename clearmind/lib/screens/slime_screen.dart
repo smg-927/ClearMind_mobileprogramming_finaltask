@@ -3,6 +3,8 @@ import 'dart:math';
 import 'dart:async';
 import 'settings_screen.dart';
 import '../quotes_provider.dart';
+import '../services/sound_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SlimeScreen extends StatefulWidget {
   const SlimeScreen({super.key});
@@ -32,6 +34,7 @@ class _SlimeScreenState extends State<SlimeScreen>
   @override
   void initState() {
     super.initState();
+    _loadCount();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 250),
@@ -114,6 +117,8 @@ class _SlimeScreenState extends State<SlimeScreen>
     final RenderBox box = context.findRenderObject() as RenderBox;
     final slimeCenter = box.size.center(_position);
     _createDrops(slimeCenter);
+    // 슬라임 사운드 재생
+    SoundService().playSlimeSound();
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
@@ -126,8 +131,21 @@ class _SlimeScreenState extends State<SlimeScreen>
     _controller.reverse();
   }
 
+  Future<void> _saveCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('slime_count', count);
+  }
+
+  Future<void> _loadCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      count = prefs.getInt('slime_count') ?? 0;
+    });
+  }
+
   @override
   void dispose() {
+    _saveCount();
     _controller.dispose();
     _dropTimer?.cancel();
     super.dispose();

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../quotes_provider.dart';
+import '../services/sound_service.dart';
 import 'settings_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SwitchScreen extends StatefulWidget {
   const SwitchScreen({super.key});
@@ -18,6 +20,7 @@ class _SwitchScreenState extends State<SwitchScreen> {
   @override
   void initState() {
     super.initState();
+    _loadCount();
     _loadQuote();
   }
 
@@ -27,6 +30,24 @@ class _SwitchScreenState extends State<SwitchScreen> {
       quote = q['quote'] ?? '';
       author = q['author'] ?? '';
     });
+  }
+
+  Future<void> _saveCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('switch_count', count);
+  }
+
+  Future<void> _loadCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      count = prefs.getInt('switch_count') ?? 0;
+    });
+  }
+
+  @override
+  void dispose() {
+    _saveCount();
+    super.dispose();
   }
 
   @override
@@ -126,6 +147,11 @@ class _SwitchScreenState extends State<SwitchScreen> {
                     isOn = !isOn;
                     count++;
                   });
+                  if (isOn) {
+                    SoundService().playSwitchOnSound();
+                  } else {
+                    SoundService().playSwitchOffSound();
+                  }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
@@ -191,18 +217,18 @@ class _SwitchScreenState extends State<SwitchScreen> {
                         Text(
                           '"$quote"',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontStyle: FontStyle.italic,
-                            color: Colors.black87,
+                            color: isOn ? Colors.black87 : Colors.white,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           '- $author',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            color: Colors.black54,
+                            color: isOn ? Colors.black54 : Colors.white,
                           ),
                         ),
                       ],

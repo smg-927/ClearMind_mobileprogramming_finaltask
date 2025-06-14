@@ -3,6 +3,7 @@ import 'dart:math';
 import '../services/sound_service.dart';
 import '../quotes_provider.dart';
 import 'settings_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PopItScreen extends StatefulWidget {
   const PopItScreen({super.key});
@@ -37,6 +38,7 @@ class _PopItScreenState extends State<PopItScreen> {
   @override
   void initState() {
     super.initState();
+    _loadCount();
     bubbles = List.generate(rows, (_) => List.generate(columns, (_) => false));
     // 각 버블마다 랜덤 색상 지정
     bubbleColorMap = List.generate(
@@ -57,8 +59,21 @@ class _PopItScreenState extends State<PopItScreen> {
     });
   }
 
+  Future<void> _saveCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('popit_count', count);
+  }
+
+  Future<void> _loadCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      count = prefs.getInt('popit_count') ?? 0;
+    });
+  }
+
   @override
   void dispose() {
+    _saveCount();
     _soundService.dispose();
     super.dispose();
   }

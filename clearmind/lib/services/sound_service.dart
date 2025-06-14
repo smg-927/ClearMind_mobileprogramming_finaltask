@@ -88,6 +88,19 @@ class SoundService {
   // 음소거 토글
   void toggleMute() {
     _isMuted = !_isMuted;
+    if (_isMuted) {
+      _audioPlayer.stop();
+    }
+  }
+
+  // 음소거 상태 설정
+  void setMute(bool mute) {
+    if (_isMuted != mute) {
+      _isMuted = mute;
+      if (_isMuted) {
+        _audioPlayer.stop();
+      }
+    }
   }
 
   // 음소거 상태 확인

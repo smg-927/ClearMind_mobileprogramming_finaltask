@@ -120,11 +120,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       soundOn = val;
                     });
                     // SoundService 음소거 상태 변경
-                    if (!val) {
-                      SoundService().toggleMute();
-                    } else {
-                      SoundService().toggleMute();
-                    }
+                    SoundService().setMute(!val);
                   },
                   secondary: const Icon(
                     Icons.volume_up,
